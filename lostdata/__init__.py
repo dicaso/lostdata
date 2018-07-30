@@ -3,7 +3,6 @@
 Module that preprocesses commonly used datasets
 and makes them available for use in python.
 """
-
 import gzip, pickle, time, os
 from zipfile import ZipFile
 from io import TextIOWrapper, StringIO
@@ -24,7 +23,7 @@ if not (
         ):
     import warnings
     warnings.warn(
-        'Create directory %s or %s for bidali.LSD to function properly, or configure cachedir/privatedir'
+        'Create directory %s or %s for lostdata to function properly, or configure cachedir/privatedir'
         % (datadir, processedDataStorage)
     )
 
@@ -60,9 +59,6 @@ class Dataset(object):
         self.__datasets__ = set(kwargs)
         for kw in kwargs:
             self.__setattr__(kw,kwargs[kw])
-
-    def generateRData(self):
-        raise NotImplementedError
 
 class IntegratedDataset(object):
     """IntegratedDataset checks and assures that for a set of samples, 
@@ -494,7 +490,7 @@ def get_proteinNetworks():
     Source: http://string-db.org/mapping_files/entrez_mappings/entrez_gene_id.vs.string.v10.28042015.tsv
     """
     import networkx as nx
-    from bidali.LSD.dealer.external import entrez
+    from lostdata.dealer import entrez
     
     #Biogrid
     with ZipFile(datadir+'ProteinNetworks/BIOGRID-ALL-3.4.147.tab2.zip') as biogridzip:
@@ -520,67 +516,6 @@ def get_proteinNetworks():
     return Dataset(biogridnx = Gbio, biogrid = ds,
                    stringnx = Gstring, string = stringdb)
     
-@storeDatasetLocally
-def get_centromeres():
-    """
-    Source: from R bioconductor GWASTools: data(centromeres.hg38)
-    """
-    from bidali.seqanalysis import loadHumanGenome
-
-    # Centromere positions
-    centromereshg38="""1      1 122026460  125184587
-2      2  92188146   94090557
-3      3  90772459   93655574
-4      4  49708101   51743951
-5      5  46485901   50059807
-6      6  58553889   59829934
-7      7  58169654   60828234
-8      8  44033745   45877265
-9      9  43236168   45518558
-10    10  39686683   41593521
-11    11  51078349   54425074
-12    12  34769408   37185252
-13    13  16000001   18051248
-14    14  16000001   18173523
-15    15  17000001   19725254
-16    16  36311159   38280682
-17    17  22813680   26885980
-18    18  15460900   20861206
-19    19  24498981   27190874
-20    20  26436233   30038348
-21    21  10864561   12915808
-22    22  12954789   15054318
-X      X  58605580   62412542
-Y      Y  10316945   10544039"""
-
-    centromereshg38 = pd.DataFrame([c.split()[-3:] for c in centromereshg38.split('\n')],
-                                   columns= "chrom left_base right_base".split())
-    centromereshg38.index = centromereshg38.chrom.apply(lambda x: 'chr'+x)
-    centromereshg38['left_base'] = centromereshg38.pop('left_base').apply(int)
-    centromereshg38['right_base']=centromereshg38.pop('right_base').apply(int)
-
-    genome = loadHumanGenome()
-    centromereshg38['len'] = centromereshg38.apply(lambda x: len(genome.chromosomes[x.name]),axis=1)
-    centromereshg38['qlen'] = centromereshg38.len - centromereshg38.right_base
-    centromereshg38['chr_weight'] = centromereshg38.len/centromereshg38.len.max()
-    centromereshg38['q_weight'] = centromereshg38.qlen/centromereshg38[['left_base','qlen']].max().max()
-    centromereshg38['p_weight'] = centromereshg38.left_base/centromereshg38[['left_base','qlen']].max().max()
-    del genome
-
-    ensembl = get_ensembl()
-    ensembl = ensembl[ensembl.chr.isin(centromereshg38.index)]
-    ensembl['chrarm'] = ensembl.apply(lambda x: 'p' if x.stop < centromereshg38.loc[x.chr].left_base else
-                                  ('q' if x.start > centromereshg38.loc[x.chr].right_base else 'pq'),axis=1)
-    centromereshg38['chr_genes'] = ensembl.groupby('chr').size()
-    centromereshg38['p_genes'] = ensembl[ensembl.chrarm=='p'].groupby('chr').size()
-    centromereshg38['q_genes'] = ensembl[ensembl.chrarm=='q'].groupby('chr').size()
-    centromereshg38['chr_gweight'] = centromereshg38.chr_genes/centromereshg38.chr_genes.max()
-    centromereshg38['q_gweight'] = centromereshg38.q_genes/centromereshg38[['p_genes','q_genes']].max().max()
-    centromereshg38['p_gweight'] = centromereshg38.p_genes/centromereshg38[['p_genes','q_genes']].max().max()
-    del ensembl
-
-    return centromereshg38
-
 #@retrieveSources -> not working login required
 def get_msigdb6():
     """
