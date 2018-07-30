@@ -3,8 +3,7 @@
 
 Reference: https://www.ensembl.org/
 """
-from bidali import LSD
-from bidali.LSD import retrieveSources,cacheableTable,processedDataStorage,datadir
+from lostdata import retrieveSources,cacheableTable,processedDataStorage,datadir
 import os, gzip, pandas as pd
 from io import TextIOWrapper, StringIO
 from urllib.parse import parse_qsl
