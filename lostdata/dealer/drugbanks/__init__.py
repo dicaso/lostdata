@@ -3,8 +3,7 @@
 
 Drug names, medication and procedure links.
 """
-from bidali import LSD
-from bidali.LSD import retrieveSources,cacheableTable,processedDataStorage,datadir
+from lostdata import retrieveSources,cacheableTable,processedDataStorage
 import os, gzip, zipfile, pandas as pd
 from io import TextIOWrapper, StringIO
 from urllib.parse import parse_qsl
@@ -50,7 +49,7 @@ def get_drugbank():
     Source: drugbank_all_full_database.xml.zip $locked$https://www.drugbank.ca/releases/5-1-1/downloads/all-full-database
     Source: https://www.drugbank.ca/docs/drugbank.xsd
     """
-    import xml.etree.ElementTree as ET:
+    import xml.etree.ElementTree as ET
     with zipfile.ZipFile(os.path.join(processedDataStorage,'drugbank_all_full_database.xml.zip')) as z:
         with z.open('full database.xml') as f:
             tree = ET.parse(f)

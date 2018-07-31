@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock,MagicMock,patch,call
 from unittest import TestCase
-from bidali.LSD import storeDatasetLocally, cacheableTable
+from lostdata import storeDatasetLocally, cacheableTable
 
 class test_storeDatasetLocally(TestCase):
     def setUp(self):

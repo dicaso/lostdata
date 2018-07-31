@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-from bidali import LSD
+import lostdata as LSD
 import pandas as pd, numpy as np
+
+privatedir = LSD.config['LSD']['privatedir']
 
 @LSD.storeDatasetLocally
 def get_THMYCN():
@@ -14,9 +16,9 @@ def get_THMYCN():
     #TH-MYCN mouse model incorporation
     limma = importr('limma')
     prepcore = importr('preprocessCore')
-    thannot = pd.read_table(LSD.datadir+'2015_Hyperplasia_ABC/SampleAnnotation.txt')
+    thannot = pd.read_table(os.path.join(privatedir,'2015_Hyperplasia_ABC/SampleAnnotation.txt'))
     thannot.group = thannot.group.apply(lambda x: x.replace('.','_'))
-    thdata = pd.read_table(LSD.datadir+'2015_Hyperplasia_ABC/uniData.txt',sep=' ')
+    thdata = pd.read_table(os.path.join(privatedir,'2015_Hyperplasia_ABC/uniData.txt'),sep=' ')
     thdata.columns = thannot.group + (['_r'+str(i+1) for i in range(4)]*3*2)
     genotype = thannot.genotype
     age = thannot.age

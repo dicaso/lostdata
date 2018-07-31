@@ -3,8 +3,8 @@
 
 Reference: https://www.genenames.org/
 """
-from bidali import LSD
-from bidali.LSD import retrieveSources,cacheableTable,processedDataStorage,datadir
+import lostdata as LSD
+from lostdata import retrieveSources,cacheableTable,processedDataStorage
 import os, gzip, pandas as pd
 from io import TextIOWrapper, StringIO
 

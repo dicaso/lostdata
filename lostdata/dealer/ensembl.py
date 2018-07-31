@@ -3,7 +3,7 @@
 
 Reference: https://www.ensembl.org/
 """
-from lostdata import retrieveSources,cacheableTable,processedDataStorage,datadir
+from lostdata import retrieveSources,cacheableTable,processedDataStorage
 import os, gzip, pandas as pd
 from io import TextIOWrapper, StringIO
 from urllib.parse import parse_qsl
@@ -32,17 +32,6 @@ def get_biomart(atts=None,dataset='hsapiens_gene_ensembl'):
     return data
 
 ## Human resources
-def get_ensembl(onlyGeneLabeled=True,onlyInChromosomes=None):
-    import warnings
-    warnings.warn("deprecated, use get_biomart instead", DeprecationWarning)
-    ensembl = pd.read_table(datadir+'Genomes/Ensembl/Biomart/idmapping_extended.txt',
-                        header=None,index_col=0,names=('egid','etid','start','stop','gcC','chr','strand','TSS','typeg','typet','gene_label','entrez'))
-    ensembl = ensembl[~ensembl.index.duplicated()]
-    if onlyGeneLabeled: ensembl = ensembl[ensembl.gene_label.isnull().apply(lambda x: not(x))]
-    ensembl.chr = ensembl.chr.apply(lambda x: 'chr'+x.replace('MT','M'))
-    if onlyInChromosomes: ensembl = ensembl[ensembl.chr.isin(onlyInChromosomes)]
-    return ensembl
-
 @retrieveSources
 def get_ensemblGeneannot():
     """

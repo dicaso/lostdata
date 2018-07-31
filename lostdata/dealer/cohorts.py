@@ -1,14 +1,16 @@
 #!/usr/bin/env python
-from bidali import LSD
+import lostdata as LSD
 import pandas as pd, numpy as np, gzip
 from os.path import expanduser, exists
 from itertools import count
-from bidali.LSD import storeDatasetLocally, datadir, Dataset
+from lostdata import storeDatasetLocally, Dataset
+
+privatedir = LSD.config['LSD']['privatedir0']
 
 #TODO => NRC segmentation data from ~/Dropbiz/Lab/z_archive/AFW/project CONEXIC/NRC data/01. JISTIC
 
 @storeDatasetLocally
-def get_NRC(datadir=datadir+'NRC_data_AFW/'):
+def get_NRC(datadir=os.path.join(privatedir,'NRC_data_AFW/')):
     # Metadata
     metadata = pd.read_excel(datadir+'20111216_NRC_samples.xlsx',skiprows=4)
     metadata.pop('Unnamed: 0')
@@ -116,10 +118,15 @@ def get_FischerData():
         }
     
     #Metadata
-    metadata = pd.read_table(gzip.open(datadir+
-                                       "R2_grabbed_data/Fischer498/metadata_src/GSE49710_series_matrix.txt.gz",'rt',
-                                       encoding="UTF-8"),
-                             skiprows=47,skipfooter=44799-66,engine='python',header=None)
+    metadata = pd.read_table(
+        gzip.open(
+            os.path.join(
+                privatedir,
+                "R2_grabbed_data/Fischer498/metadata_src/GSE49710_series_matrix.txt.gz"
+            ),'rt', encoding="UTF-8"
+        ),
+        skiprows=47,skipfooter=44799-66,engine='python',header=None
+    )
     metadata.index = metadata[0].apply(lambda x: x.replace('!',''))
     del metadata[0]
     metadata = metadata.T
@@ -130,8 +137,15 @@ def get_FischerData():
                         if c.startswith('Sample_char') else c for c in metadata.columns]
     metadata = metadata.applymap(lambda x: x.split(': ')[1] if ': ' in x else x)
     
-    metadatasurv = pd.read_table(gzip.open(datadir+"R2_grabbed_data/Fischer498/metadata_src/GSE62564_series_matrix.txt.gz",'rt',encoding="UTF-8"),
-                                 skiprows=51,skipfooter=102-74,engine='python')
+    metadatasurv = pd.read_table(
+        gzip.open(
+            os.path.join(
+                privatedir,
+                "R2_grabbed_data/Fischer498/metadata_src/GSE62564_series_matrix.txt.gz"
+            ),'rt',encoding="UTF-8"
+        ),
+        skiprows=51,skipfooter=102-74,engine='python'
+    )
     metadatasurv.index = metadatasurv['!Sample_geo_accession'].apply(lambda x: x.replace('!',''))
     del metadatasurv['!Sample_geo_accession']
     metadatasurv = metadatasurv.T
@@ -150,12 +164,12 @@ def get_FischerData():
     metadata.progression = metadata.progression == '1'
 
     #Expression data
-    exprdata = pd.read_table(datadir+'R2_grabbed_data/Fischer498/GSE49710_R2.txt')
+    exprdata = pd.read_table(os.path.join(privatedir,'R2_grabbed_data/Fischer498/GSE49710_R2.txt'))
     exprdata.index = exprdata.pop('#H:hugo')
     del exprdata['probeset']
 
     #aCGH
-    aCGH = pd.read_table(datadir+'R2_grabbed_data/Fischer498/SEQC_aCGH/SEQC_aCGH_all_146.txt')
+    aCGH = pd.read_table(os.path.join(privatedir,'R2_grabbed_data/Fischer498/SEQC_aCGH/SEQC_aCGH_all_146.txt'))
     geosearch = metadata[['Sample_title','Sample_geo_accession']].copy()
     geosearch.Sample_geo_accession = geosearch.index
     geosearch.index = geosearch.Sample_title
@@ -202,10 +216,14 @@ def get_SequencedFischerData():
     print('Filtering settings:', filteredOn)
 
     #Metadata
-    metadata = pd.read_table(gzip.open(datadir+
-                                       "R2_grabbed_data/Fischer498/metadata_src/GSE49710_series_matrix.txt.gz",'rt',
-                                       encoding="UTF-8"),
-                             skiprows=47,skipfooter=44799-66,engine='python',header=None)
+    metadata = pd.read_table(
+        gzip.open(
+            os.path.join(
+                privatedir,
+                "R2_grabbed_data/Fischer498/metadata_src/GSE49710_series_matrix.txt.gz"
+            ), 'rt', encoding="UTF-8"
+        ), skiprows=47,skipfooter=44799-66,engine='python',header=None
+    )
     metadata.index = metadata[0].apply(lambda x: x.replace('!',''))
     del metadata[0]
     metadata = metadata.T
@@ -216,8 +234,14 @@ def get_SequencedFischerData():
                         if c.startswith('Sample_char') else c for c in metadata.columns]
     metadata = metadata.applymap(lambda x: x.split(': ')[1] if ': ' in x else x)
     
-    metadatasurv = pd.read_table(gzip.open(datadir+"R2_grabbed_data/Fischer498/metadata_src/GSE62564_series_matrix.txt.gz",'rt',encoding="UTF-8"),
-                                 skiprows=51,skipfooter=102-74,engine='python')
+    metadatasurv = pd.read_table(
+        gzip.open(
+            os.path.join(
+                privatedir,
+                "R2_grabbed_data/Fischer498/metadata_src/GSE62564_series_matrix.txt.gz"
+            ),'rt',encoding="UTF-8"
+        ), skiprows=51,skipfooter=102-74,engine='python'
+    )
     metadatasurv.index = metadatasurv['!Sample_geo_accession'].apply(lambda x: x.replace('!',''))
     del metadatasurv['!Sample_geo_accession']
     metadatasurv = metadatasurv.T
@@ -238,15 +262,17 @@ def get_SequencedFischerData():
 
     #Expression data
     ## Array expression
-    exprdata_A = pd.read_table(datadir+'R2_grabbed_data/Fischer498/GSE49710_R2.txt')
+    exprdata_A = pd.read_table(os.path.join(privatedir,'R2_grabbed_data/Fischer498/GSE49710_R2.txt'))
     exprdata_A.index = exprdata_A.pop('#H:hugo')
     del exprdata_A['probeset']
     
     ## RNAseq gene expression
     exprdata_G = pd.read_table(
         gzip.open(
-            datadir+'R2_grabbed_data/Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_G_log2.txt.gz',
-            'rt',encoding="UTF-8"
+            os.path.join(
+                privatedir,
+                'R2_grabbed_data/Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_G_log2.txt.gz'
+            ), 'rt',encoding="UTF-8"
         ),
         index_col = '00gene_id'
     )
@@ -258,8 +284,10 @@ def get_SequencedFischerData():
     ## RNAseq transcript level expression
     exprdata_T = pd.read_table(
         gzip.open(
-            datadir+'R2_grabbed_data/Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_T_log2.txt.gz',
-            'rt',encoding="UTF-8"
+            os.path.join(
+                privatedir,
+                'R2_grabbed_data/Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_T_log2.txt.gz'
+            ), 'rt',encoding="UTF-8"
         ),
         index_col = '00transcript_id'
     )
@@ -268,8 +296,10 @@ def get_SequencedFischerData():
     ## RNAseq junction level expression
     exprdata_J = pd.read_table(
         gzip.open(
-            datadir+'R2_grabbed_data/Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_J_log2.txt.gz',
-            'rt',encoding="UTF-8"
+            os.path.join(
+                privatedir,
+                'R2_grabbed_data/Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_J_log2.txt.gz'
+            ), 'rt',encoding="UTF-8"
         ),
         index_col = 'sample_ID'
     )
@@ -279,7 +309,9 @@ def get_SequencedFischerData():
     exprdata = exprdata_G
     
     #aCGH
-    aCGH = pd.read_table(datadir+'R2_grabbed_data/Fischer498/SEQC_aCGH/SEQC_aCGH_all_146.txt')
+    aCGH = pd.read_table(
+        os.path.join(privatedir,'R2_grabbed_data/Fischer498/SEQC_aCGH/SEQC_aCGH_all_146.txt')
+    )
     geosearch = metadata[['Sample_title']].copy()
     geosearch.reset_index(inplace=True)
     geosearch.set_index('Sample_title',inplace=True)
@@ -318,8 +350,11 @@ def get_gtex():
     Reference: https://www.gtexportal.org/home/datasets
     """
     gtex = pd.read_table(
-        gzip.open(datadir+'gtexportal/GTEx_Analysis_v6p_RNA-seq_RNA-SeQCv1.1.8_gene_median_rpkm.gct.gz'),
-        skiprows=2,index_col='Description'
+        gzip.open(
+            os.path.join(
+                privatedir,
+                'gtexportal/GTEx_Analysis_v6p_RNA-seq_RNA-SeQCv1.1.8_gene_median_rpkm.gct.gz'
+            ), skiprows=2,index_col='Description'
     )
     ensgref = gtex.pop('Name')
 

@@ -1,9 +1,14 @@
 #!/usr/bin/env python
-from bidali import LSD
+import lostdata as LSD
 import gzip, pandas as pd
 from io import TextIOWrapper
 
-def get_cancerrxgene(datadir=LSD.datadir+'PMID_published_tables/27397505_pharmacogenomics_cancer/', gene_cn=False, exprdata=False):
+privatedir = LSD.config['LSD']['privatedir']
+
+def get_cancerrxgene(
+        datadir=os.path.join(privatedir,'PMID_published_tables/27397505_pharmacogenomics_cancer/'),
+        gene_cn=False, exprdata=False
+    ):
     """
     Reference: http://www.cancerrxgene.org/downloads
 
@@ -19,25 +24,32 @@ def get_cancerrxgene(datadir=LSD.datadir+'PMID_published_tables/27397505_pharmac
     >>> cdx = get_cancerrxgene()
     """
     # Metadata
-    cell_lines = pd.read_excel(datadir+'Cell_Lines_Details.xlsx',sheetname='Cell line details')
-    cell_tissues = pd.read_excel(datadir+'Cell_Lines_Details.xlsx',
+    cell_lines = pd.read_excel(os.path.join(datadir,'Cell_Lines_Details.xlsx'),sheetname='Cell line details')
+    cell_tissues = pd.read_excel(os.path.join(datadir,'Cell_Lines_Details.xlsx'),
                                  sheetname='COSMIC tissue classification',index_col='Line')
     cell_lines = cell_lines.join(cell_tissues,on='Sample Name')
     del cell_lines['COSMIC_ID']
     del cell_tissues
 
     # Compounds
-    compounds = pd.read_excel(datadir+'Screened_Compounds.xlsx',index_col='Drug Name')
+    compounds = pd.read_excel(os.path.join(datadir,'Screened_Compounds.xlsx'),index_col='Drug Name')
 
     # Compound responses
-    compound_responses = pd.read_excel(datadir+'v17_fitted_dose_response.xlsx',index_col='COSMIC_ID')
+    compound_responses = pd.read_excel(os.path.join(datadir,'v17_fitted_dose_response.xlsx'),index_col='COSMIC_ID')
 
     # Expression data
     if exprdata:
-        exprdata = pd.read_table(TextIOWrapper(gzip.open(datadir+'sanger1018_brainarray_ensemblgene_rma.txt.gz')),index_col='ensembl_gene')
+        exprdata = pd.read_table(
+            TextIOWrapper(
+                gzip.open(
+                    os.path.join(datadir,'sanger1018_brainarray_ensemblgene_rma.txt.gz')
+                )
+            ),
+            index_col='ensembl_gene'
+        )
     
     # CN data
     if gene_cn:
-        gene_cn = pd.read_excel(datadir+'Gene_level_CN.xlsx',sheetname='Gene_level_CN',index_col='gene')
+        gene_cn = pd.read_excel(os.path.join(datadir,'Gene_level_CN.xlsx'),sheetname='Gene_level_CN',index_col='gene')
 
     return LSD.Dataset(**locals())

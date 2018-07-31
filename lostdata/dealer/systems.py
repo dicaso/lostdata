@@ -1,19 +1,23 @@
 #!/usr/bin/env python
-from bidali import LSD
-import gzip, tarfile, biomart, pandas as pd
+import lostdata as LSD
+import os, gzip, tarfile, biomart, pandas as pd
 from io import TextIOWrapper, StringIO
 from .ensembl import get_biomart
 
-def get_proteinHalfLifes(datadir=LSD.datadir+'PMID_published_tables/21593866_protein_half_lifes/'):
+privatedir = LSD.config['LSD']['privatedir']
+
+def get_proteinHalfLifes(
+        datadir=os.path.join(privatedir,'PMID_published_tables/21593866_protein_half_lifes/')
+    ):
     """
     Mouse protein half lifes
 
     >>> phl = get_proteinHalfLifes()
     """
-    phl = pd.read_excel(datadir+"nature10098-s5.xls",sheetname=0)
+    phl = pd.read_excel(os.path.join(datadir,"nature10098-s5.xls"),sheetname=0)
     return phl
 
-def get_cyclebase(datadir=LSD.datadir+'PMID_published_tables/25378319_cyclebase/'):
+def get_cyclebase(datadir=os.path.join(privatedir,'PMID_published_tables/25378319_cyclebase/')):
     """
     Info: https://cyclebase.org/
     Info: http://genome-www.stanford.edu/Human-CellCycle/HeLa/data/dataPlusScores_all5.txt
