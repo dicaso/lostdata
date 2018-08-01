@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Format types for localised data structures.
 """
-from .processing import retrieveSources,cacheableTable
+from .processing import retrieveSources, cacheableTable, processedDataStorage
 import os, gzip, zipfile, pandas as pd
 from collections import OrderedDict
 
@@ -18,6 +18,7 @@ class Dataset(object):
         for kw in kwargs:
             self.__setattr__(kw,kwargs[kw])
 
+## Integrated
 class IntegratedDataset(object):
     """IntegratedDataset checks and assures that for a set of samples, 
     features and datatypes all data is internally cross-referencable and
@@ -87,7 +88,7 @@ class IntegratedDataset(object):
     #     return xr.open_dataset(filename)
     
 
-## Specific integrated datasets
+### Specific integrated datasets
 class CoexDataset(IntegratedDataset):
     """IntegratedDataset that contains data on
     copy number alteration status of genes (optionally
@@ -210,7 +211,49 @@ class DatasetRepo:
         self.archive = OrderedDict()
         pickle.dump(self,open(self.filename,'wb'))
 
-# XML dataset
+## Dataset class for working with samples collections
+class SamplesDataset(object):
+    """Samples dataset
+
+    Class to create a collection of samples. Intantiating an object does
+    not start downloading data, but only configures the object. This
+    design choice has been made because the lostdata.dealer module
+    containes several SamplesDataset resources.
+
+    Args:
+        name (str): Dataset name.
+        source (str): Where the original dataset is located.
+        protocol (str): Protocol for accessing/downloading the data.
+        target (str): Directory where data will be stored. If not provided,
+          will be stored in 'name' subdir of `processedDataStorage`.
+          
+    """
+    class Samples(object):
+        def __init__(self):
+            self.__list = []
+
+        def append(self,obj):
+            self.__list.append(obj)
+
+        def __getitem__(self,key):
+            return self.__list[key]
+    
+    def __init__(self,name,source,protocol='requests',target=None):
+        self.name = name
+        self.source = source
+        self.protocol = protocol
+        self.samples = Samples()
+        self.target = target if target else os.path.join(processedDataStorage,name)
+        self.targetsamples = os.path.join(self.target,'samples')
+        
+    def setuptarget(self):
+        """Setup target directories"""
+        if not os.path.exists(self.target):
+            os.mkdir(self.target)
+            os.mkdir(self.targetsamples)
+    
+
+## XML dataset
 class XML(object):
     """Class to work with xml files.
     
