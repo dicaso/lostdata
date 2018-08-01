@@ -247,5 +247,6 @@ def download_ftp_resource(server,directory='.',filelist=None,filter=None,targetd
         if not filter or filter.search(f):
             foutpath = os.path.join(targetdir,f)
             if not os.path.exists(foutpath):
+                print('downloading',f)
                 ftp.retrbinary('RETR %s' % f, open(foutpath, 'wb').write)
     ftp.quit()
