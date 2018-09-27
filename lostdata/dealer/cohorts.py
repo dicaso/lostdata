@@ -5,7 +5,7 @@ from os.path import expanduser, exists
 from itertools import count
 from lostdata import storeDatasetLocally, Dataset
 
-privatedir = LSD.config['LSD']['privatedir0']
+privatedir = LSD.config['LSD']['privatedir']
 
 #TODO => NRC segmentation data from ~/Dropbiz/Lab/z_archive/AFW/project CONEXIC/NRC data/01. JISTIC
 
