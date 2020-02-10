@@ -31,7 +31,7 @@ def retrieveSources(dataset_getfunction):
 
     def wrapper(*args, **kwargs):
         try:
-            return dataset_getfunction(*args, **kwargs)
+            dataset_getfunction_result = dataset_getfunction(*args, **kwargs)
         except FileNotFoundError as fnf:
             for docline in inspect.getdoc(dataset_getfunction).split('\n') + list(fnf.args):
                 if docline.startswith('Source:'):
@@ -62,11 +62,15 @@ def retrieveSources(dataset_getfunction):
                                         f.write(data)
                                         done = int(50 * dl / total_length)
                                         print("\r[{}{}]".format('=' * done, ' ' * (50-done)),end='',flush=True)
-            try: return dataset_getfunction(*args, **kwargs)
+                        print('Downloaded', filename, exists(os.path.join(processedDataStorage,filename)))
+            try: dataset_getfunction_result = dataset_getfunction(*args, **kwargs)
             except FileNotFoundError:
                 print('Either not all source files are documented correctly in docstring,',
                       'or there is a source file unrelated issue')
                 raise
+
+        # Returning the result produced by the wrapped function
+        return dataset_getfunction_result
 
     return wrapper
 

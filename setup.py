@@ -21,6 +21,7 @@ setup(name = 'lostdata',
           'pyliftover',
           'requests',
           'plumbum',
+          'xmltodict'
       ],
       extras_require = {
           #for netCDF4 output, depends on: libnetcdf-dev libhdf5-dev
