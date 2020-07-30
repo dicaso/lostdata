@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name = 'lostdata',
-      version = '0.0.2',
+      version = '0.0.3',
       description = 'LOcalized STructured DAta TAbles',
       url = 'https://github.com/dicaso/lostdata',
       author = 'Christophe Van Neste',
@@ -11,6 +11,7 @@ setup(name = 'lostdata',
       python_requires='>3.6',
       install_requires = [
           #Generated with `pipreqs .` and then moved here from requirements.txt
+          'appdirs',
           'numpy',
           'pandas',
           'xarray',
