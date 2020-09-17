@@ -34,7 +34,8 @@ def retrieveSources(dataset_getfunction):
             dataset_getfunction_result = dataset_getfunction(*args, **kwargs)
         except FileNotFoundError as fnf:
             for docline in inspect.getdoc(dataset_getfunction).split('\n') + list(fnf.args):
-                if docline.startswith('Source:'):
+                # Test if docline is str, as sometimes non-str arguments get thrown
+                if isinstance(docline, str) and docline.startswith('Source:'):
                     docline = docline.split()
                     if len(docline) == 2:
                         url = docline[1]

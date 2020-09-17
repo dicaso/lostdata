@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name = 'lostdata',
-      version = '0.0.3',
+      version = '0.0.4',
       description = 'LOcalized STructured DAta TAbles',
       url = 'https://github.com/dicaso/lostdata',
       author = 'Christophe Van Neste',
