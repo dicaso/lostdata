@@ -53,7 +53,7 @@ def retrieveSources(dataset_getfunction):
                         else:
                             r = requests.get(url,stream=True)
                             total_length = r.headers.get('content-length')
-                            with open(processedDataStorage+filename,'wb') as f:
+                            with open(os.path.join(processedDataStorage,filename),'wb') as f:
                                 if total_length is None: f.write(r.content)
                                 else:
                                     dl = 0
