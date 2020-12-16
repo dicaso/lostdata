@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import lostdata as LSD
 import pandas as pd, numpy as np, gzip
+import os
 from os.path import expanduser, exists
 from itertools import count
 from lostdata import storeDatasetLocally, Dataset
@@ -354,7 +355,7 @@ def get_gtex():
             os.path.join(
                 privatedir,
                 'gtexportal/GTEx_Analysis_v6p_RNA-seq_RNA-SeQCv1.1.8_gene_median_rpkm.gct.gz'
-            ), skiprows=2,index_col='Description'
+            )), skiprows=2,index_col='Description'
     )
     ensgref = gtex.pop('Name')
 

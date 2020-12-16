@@ -11,8 +11,9 @@ from io import TextIOWrapper, StringIO
 @retrieveSources
 def get_genenames():
     """
-    Source: genenames.tsv ftp://ftp.ebi.ac.uk/pub/databases/genenames/new/tsv/non_alt_loci_set.txt
+    Source: genenames.tsv ftp://ftp.ebi.ac.uk/pub/databases/genenames/new/tsv/hgnc_complete_set.txt
     """
+    # previously non_alt_loci_set.txt, but gave incomplete results
     return pd.read_table(
         os.path.join(processedDataStorage, 'genenames.tsv'), low_memory = False
     )#, index_col='GeneID')
