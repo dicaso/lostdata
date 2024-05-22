@@ -25,4 +25,7 @@ Create config file `~/.lsd.cfg` with custom chosen directories:
     cachedir=~/LSData/cache/
     privatedir=~/LSData/private/
 
+## Build and run lostdata with Docker
 
+    docker build -t lostdata https://github.com/dicaso/lostdata.git
+    docker run -it lostdata
