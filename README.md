@@ -27,5 +27,5 @@ Create config file `~/.lsd.cfg` with custom chosen directories:
 
 ## Build and run lostdata with Docker
 
-    docker build -t lostdata https://github.com/dicaso/lostdata.git
+    docker build -t lostdata https://github.com/dicaso/lostdata.git#main
     docker run -it lostdata
