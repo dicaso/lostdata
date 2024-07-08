@@ -39,12 +39,14 @@ def get_ensemblGeneannot():
     Source: ftp://ftp.ensembl.org/pub/release-88/gtf/homo_sapiens/Homo_sapiens.GRCh38.88.gtf.gz
     """
     import gffutils
-    try: db = gffutils.FeatureDB(processedDataStorage+'Homo_sapiens.GRCh38.88.sqlite3')
+    try: db = gffutils.FeatureDB(os.path.join(
+        processedDataStorage,'Homo_sapiens.GRCh38.88.sqlite3'
+    ))
     except ValueError:
-        if not os.path.exists(processedDataStorage+'Homo_sapiens.GRCh38.88.gtf.gz'):
+        if not os.path.exists(os.path.join(processedDataStorage,'Homo_sapiens.GRCh38.88.gtf.gz')):
             raise FileNotFoundError
-        db = gffutils.create_db(processedDataStorage+'Homo_sapiens.GRCh38.88.gtf.gz',
-                                processedDataStorage+'Homo_sapiens.GRCh38.88.sqlite3',
+        db = gffutils.create_db(os.path.join(processedDataStorage,'Homo_sapiens.GRCh38.88.gtf.gz'),
+                                os.path.join(processedDataStorage,'Homo_sapiens.GRCh38.88.sqlite3'),
                                 disable_infer_genes=True,disable_infer_transcripts=True)
     return db
 
@@ -55,7 +57,7 @@ def get_mouseEnsemblSet():
     """
     Source: ftp://ftp.ensembl.org/pub/release-90/gff3/mus_musculus/Mus_musculus.GRCm38.90.gff3.gz
     """
-    db = pd.read_table(TextIOWrapper(gzip.open(processedDataStorage+'Mus_musculus.GRCm38.90.gff3.gz')),comment='#',
+    db = pd.read_table(TextIOWrapper(gzip.open(os.path.join(processedDataStorage,'Mus_musculus.GRCm38.90.gff3.gz'))),comment='#',
                        names='seqid,source,type,start,end,score,strand,phase,attribute'.split(','),low_memory=False)
     genes = db[db.type == 'gene'].copy()
     transcripts = db[db.type == 'mRNA'].copy()
