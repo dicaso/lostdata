@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from bidali import LSD
+import lostdata as LSD
 import pandas as pd, numpy as np
 
 @LSD.storeDatasetLocally
@@ -8,11 +8,13 @@ def get_UHRprofiles():
     PDP meta cnv dataset from Ultra High Risk project. 
     Samples are all high risk (not ultra in se, that was project aim)
 
-    Source: ~/Dropbiz/Basecamp/BRIP1/2017/2017_003_Data_analysis_BRIP1_paper/profiles_UHR/
+    Source: ~/LSData/profiles_UHR/
     """
-    datacn = LSD.expanduser("~/Dropbiz/Basecamp/BRIP1/2017/2017_003_Data_analysis_BRIP1_paper/profiles_UHR/")
-    centromereshg38 = LSD.get_centromeres()
-    lo = LSD.get_lift19to38()
+    from lostdata.dealer.entrez import get_lift19to38
+    from bidali.seqanalysis import get_centromeres #TODO move get_centromeres to lostdata to avoid circular dependency
+    datacn = LSD.expanduser("~/LSData/profiles_UHR/")
+    centromereshg38 = get_centromeres()
+    lo = get_lift19to38()
     
     # All samples => TODO filter patients that only have whole chromosome gains
     samples = pd.read_table(datacn+'samples_UHR.txt')
@@ -30,11 +32,11 @@ def get_UHRprofiles():
     profiles = profiles[profiles.annotation != 'normal']
 
     #Annotate chr arm
-    profiles['chrarm'] = profiles.apply(lambda x: 'chr{}{}'.format(x['chromosome'],'p' if x['max38'] < centromereshg38.ix['chr'+x['chromosome']]['left_base'] else
-                                                                   ('q' if x['min38'] > centromereshg38.ix['chr'+x['chromosome']]['right_base'] else 'p+q')), axis=1)
+    profiles['chrarm'] = profiles.apply(lambda x: 'chr{}{}'.format(x['chromosome'],'p' if x['max38'] < centromereshg38.loc['chr'+x['chromosome']]['left_base'] else
+                                                                   ('q' if x['min38'] > centromereshg38.loc['chr'+x['chromosome']]['right_base'] else 'p+q')), axis=1)
     #Annotate in profiles mycn status
     samples.index = samples.Name
-    profiles['MYCN'] = profiles.profile_id.apply(lambda x: samples.ix[x].MYCN)
+    profiles['MYCN'] = profiles.profile_id.apply(lambda x: samples.loc[x].MYCN)
     #profsperMYCNstatus = profiles[profiles.chromosome != '2'].groupby(('MYCN','profile_id')).size()
     #profsperMYCNstatus[0].mean()
     #(profsperMYCNstatus[0].var())**.5

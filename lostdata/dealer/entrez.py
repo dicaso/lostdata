@@ -18,10 +18,11 @@ def get_liftover(frm=19,to=38):
     """
     from pyliftover import LiftOver
     liftoverfile = 'hg{}ToHg{}.over.chain.gz'.format(frm,to)
-    try: return LiftOver(processedDataStorage+liftoverfile)
+    try: return LiftOver(os.path.join(processedDataStorage,liftoverfile))
     except FileNotFoundError:
         raise FileNotFoundError('Source: http://hgdownload.cse.ucsc.edu/gbdb/hg{}/liftOver/{}'.format(frm,liftoverfile))
 
+@retrieveSources
 def get_lift19to38():
     """
     Source: http://hgdownload.cse.ucsc.edu/gbdb/hg19/liftOver/hg19ToHg38.over.chain.gz
@@ -33,7 +34,7 @@ def get_refseq():
     """
     Source: ftp://ftp.ncbi.nih.gov/refseq/H_sapiens/RefSeqGene/gene_RefSeqGene
     """
-    entrez = pd.read_table(processedDataStorage+'gene_RefSeqGene', index_col='GeneID')
+    entrez = pd.read_table(os.path.join(processedDataStorage,'gene_RefSeqGene'), index_col='GeneID')
     return entrez
 
 @retrieveSources
@@ -44,7 +45,7 @@ def get_gene_info():
     All species -> ftp://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz
     """
     gene_info = pd.read_table(
-        TextIOWrapper(gzip.open(processedDataStorage+'Homo_sapiens.gene_info.gz')),
+        TextIOWrapper(gzip.open(os.path.join(processedDataStorage,'Homo_sapiens.gene_info.gz'))),
         index_col='GeneID'
     )
     return gene_info
@@ -56,7 +57,7 @@ def get_msigdb6():
     """
     import xml.etree.ElementTree as ET
     import pickle
-    parser = ET.parse(processedDataStorage+'msigdb_v6.0.xml')
+    parser = ET.parse(os.path.join(processedDataStorage,'msigdb_v6.0.xml'))
     root = parser.getroot()
     genesetsCollections = {} 
     for geneset in root:
