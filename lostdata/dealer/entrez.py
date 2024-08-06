@@ -50,10 +50,10 @@ def get_gene_info():
     )
     return gene_info
 
-#@retrieveSources -> not working login required
+@retrieveSources
 def get_msigdb6():
     """
-    Source: http://software.broadinstitute.org/gsea/msigdb/download_file.jsp?filePath=/resources/msigdb/5.2/msigdb_v6.0.xml
+    Source: https://data.broadinstitute.org/gsea-msigdb/msigdb/release/6.0/msigdb_v6.0.xml
     """
     import xml.etree.ElementTree as ET
     import pickle

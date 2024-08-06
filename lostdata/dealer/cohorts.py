@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 import lostdata as LSD
+from lostdata.dealer.entrez import get_liftover, get_lift19to38
 import pandas as pd, numpy as np, gzip
 import os
 from os.path import expanduser, exists
 from itertools import count
 from lostdata import storeDatasetLocally, Dataset
+from lostdata.dealer.ensembl import get_ensemblGeneannot
 
 privatedir = LSD.config['LSD']['privatedir']
 
-#TODO => NRC segmentation data from ~/Dropbiz/Lab/z_archive/AFW/project CONEXIC/NRC data/01. JISTIC
+#TODO => NRC segmentation data from AFW/project CONEXIC/NRC data/01. JISTIC
 
 @storeDatasetLocally
 def get_NRC(datadir=os.path.join(privatedir,'NRC_data_AFW/')):
@@ -22,7 +24,7 @@ def get_NRC(datadir=os.path.join(privatedir,'NRC_data_AFW/')):
     probeinfo = pd.read_table(datadir+'mRNA_info.txt',index_col='Probeset').dropna()
     print('Only retaining exprdata for HUGO genes')
     exprdata = exprdata[exprdata.index.isin(probeinfo.index)]
-    probeinfo = pd.DataFrame([(h,v) for v in exprdata.index for h in probeinfo.ix[v]['HUGO'].split(',')],
+    probeinfo = pd.DataFrame([(h,v) for v in exprdata.index for h in probeinfo.loc[v]['HUGO'].split(',')],
                              columns=['HUGO','Probeset'])
     print('For genes with multiple probes, taking median')
     exprdata = probeinfo.join(other=exprdata,on='Probeset')
@@ -32,9 +34,10 @@ def get_NRC(datadir=os.path.join(privatedir,'NRC_data_AFW/')):
     exprdata.drop('',inplace=True)
 
     # Copy number variant data
-    lo=LSD.get_liftover(frm=18,to=38)
-    segments = pd.read_table(expanduser('~/Dropbox (speleman lab)/\
-Lab/z_archive/AFW/project_CONEXIC/NRC_data/01_JISTIC/20111106_NRCdata_wavecorrected_en_Dublin_CBS.txt'))
+    lo=get_liftover(frm=18,to=38)
+    segments = pd.read_table(os.path.join(
+        privatedir, 'NRC_data_AFW/20111106_NRCdata_wavecorrected_en_Dublin_CBS.txt'
+    ))
     segments.chromosome = segments.chromosome.apply(
         lambda x: 'chrX' if x == 23 else 'chrY' if x == 24 else 'chr{}'.format(x))
     segments['Start38'] = segments.T.apply(
@@ -49,7 +52,7 @@ Lab/z_archive/AFW/project_CONEXIC/NRC_data/01_JISTIC/20111106_NRCdata_wavecorrec
     print(segments.shape[0],'after converting to hg38')
 
     ## Assign genes to regions
-    genannot = LSD.get_ensemblGeneannot()
+    genannot = get_ensemblGeneannot()
     # def get_genes(region,context):
     #     """
     #     segments dataframe needs to be sorted according to alphabetical chrom name, and numerical location
@@ -101,7 +104,7 @@ Lab/z_archive/AFW/project_CONEXIC/NRC_data/01_JISTIC/20111106_NRCdata_wavecorrec
     for sname,sample in segments.groupby('exp_id'):
         geneCNVannotation[sname] = {}
         for i in sample.T:
-            for g in sample.ix[i].genes: geneCNVannotation[sname][g] = sample.ix[i].annotation
+            for g in sample.loc[i].genes: geneCNVannotation[sname][g] = sample.loc[i].annotation
     geneCNVannotation = pd.DataFrame(geneCNVannotation)
     geneCNVannotation = geneCNVannotation.fillna('normal')
 
@@ -123,7 +126,7 @@ def get_FischerData():
         gzip.open(
             os.path.join(
                 privatedir,
-                "R2_grabbed_data/Fischer498/metadata_src/GSE49710_series_matrix.txt.gz"
+                "Fischer498/metadata_src/GSE49710_series_matrix.txt.gz"
             ),'rt', encoding="UTF-8"
         ),
         skiprows=47,skipfooter=44799-66,engine='python',header=None
@@ -142,7 +145,7 @@ def get_FischerData():
         gzip.open(
             os.path.join(
                 privatedir,
-                "R2_grabbed_data/Fischer498/metadata_src/GSE62564_series_matrix.txt.gz"
+                "Fischer498/metadata_src/GSE62564_series_matrix.txt.gz"
             ),'rt',encoding="UTF-8"
         ),
         skiprows=51,skipfooter=102-74,engine='python'
@@ -152,7 +155,7 @@ def get_FischerData():
     metadatasurv = metadatasurv.T
     metadatasurv.columns = range(len(metadatasurv.columns))
     metadatasurv = metadatasurv[list(range(7,21))]
-    metadatasurv.columns = [v.split(':')[0].replace(' ','_') for v in metadatasurv.ix[metadatasurv.first_valid_index()]]
+    metadatasurv.columns = [v.split(':')[0].replace(' ','_') for v in metadatasurv.loc[metadatasurv.first_valid_index()]]
     metadatasurv = metadatasurv.applymap(lambda x: x.split(': ')[1] if not x is np.nan else x)
     metadatasurv.index = metadata.index #Both sample sets are sorted the same way, but different gse names
     assert sum(metadatasurv.age == metadata.age_at_diagnosis) == len(metadata)
@@ -165,26 +168,26 @@ def get_FischerData():
     metadata.progression = metadata.progression == '1'
 
     #Expression data
-    exprdata = pd.read_table(os.path.join(privatedir,'R2_grabbed_data/Fischer498/GSE49710_R2.txt'))
+    exprdata = pd.read_table(os.path.join(privatedir,'Fischer498/GSE49710_R2.txt'))
     exprdata.index = exprdata.pop('#H:hugo')
     del exprdata['probeset']
 
     #aCGH
-    aCGH = pd.read_table(os.path.join(privatedir,'R2_grabbed_data/Fischer498/SEQC_aCGH/SEQC_aCGH_all_146.txt'))
+    aCGH = pd.read_table(os.path.join(privatedir,'Fischer498/SEQC_aCGH/SEQC_aCGH_all_146.txt'))
     geosearch = metadata[['Sample_title','Sample_geo_accession']].copy()
     geosearch.Sample_geo_accession = geosearch.index
     geosearch.index = geosearch.Sample_title
-    aCGH.Sample = aCGH.Sample.apply(lambda x: geosearch.ix[x].Sample_geo_accession)
+    aCGH.Sample = aCGH.Sample.apply(lambda x: geosearch.loc[x].Sample_geo_accession)
     del geosearch
     aCGH['log2ratio'] = (aCGH.CN/2).apply(np.log2)
     #Convert coordinates to hg38
-    lo = LSD.get_lift19to38()
+    lo = get_lift19to38()
     aCGH['Start38'] = aCGH.T.apply(lambda x: lo.convert_coordinate(x.Chromosome,x.Start)).apply(lambda x: x[0][1] if x else np.nan)
     aCGH['End38'] = aCGH.T.apply(lambda x: lo.convert_coordinate(x.Chromosome,x.End)).apply(lambda x: x[0][1] if x else np.nan)
     del lo, aCGH['Start'], aCGH['End']
     aCGH = aCGH.dropna().copy()
     #Assign genes to regions
-    genannot = LSD.get_ensemblGeneannot()
+    genannot = get_ensemblGeneannot()
     aCGH['genes'] = aCGH.T.apply(lambda x: {f.attributes['gene_name'][0] for f in genannot.region('{}:{}-{}'
                                                     .format(x.Chromosome[3:],int(x.Start38),int(x.End38)),featuretype='gene')})
     aCGH['nrGenes'] = aCGH.genes.apply(len)
@@ -221,7 +224,7 @@ def get_SequencedFischerData():
         gzip.open(
             os.path.join(
                 privatedir,
-                "R2_grabbed_data/Fischer498/metadata_src/GSE49710_series_matrix.txt.gz"
+                "Fischer498/metadata_src/GSE49710_series_matrix.txt.gz"
             ), 'rt', encoding="UTF-8"
         ), skiprows=47,skipfooter=44799-66,engine='python',header=None
     )
@@ -239,7 +242,7 @@ def get_SequencedFischerData():
         gzip.open(
             os.path.join(
                 privatedir,
-                "R2_grabbed_data/Fischer498/metadata_src/GSE62564_series_matrix.txt.gz"
+                "Fischer498/metadata_src/GSE62564_series_matrix.txt.gz"
             ),'rt',encoding="UTF-8"
         ), skiprows=51,skipfooter=102-74,engine='python'
     )
@@ -248,7 +251,7 @@ def get_SequencedFischerData():
     metadatasurv = metadatasurv.T
     metadatasurv.columns = range(len(metadatasurv.columns))
     metadatasurv = metadatasurv[list(range(7,21))]
-    metadatasurv.columns = [v.split(':')[0].replace(' ','_') for v in metadatasurv.ix[metadatasurv.first_valid_index()]]
+    metadatasurv.columns = [v.split(':')[0].replace(' ','_') for v in metadatasurv.loc[metadatasurv.first_valid_index()]]
     metadatasurv = metadatasurv.applymap(lambda x: x.split(': ')[1] if not x is np.nan else x)
     metadatasurv.index = metadata.index #Both sample sets are sorted the same way, but different gse names
     assert sum(metadatasurv.age == metadata.age_at_diagnosis) == len(metadata)
@@ -263,7 +266,7 @@ def get_SequencedFischerData():
 
     #Expression data
     ## Array expression
-    exprdata_A = pd.read_table(os.path.join(privatedir,'R2_grabbed_data/Fischer498/GSE49710_R2.txt'))
+    exprdata_A = pd.read_table(os.path.join(privatedir,'Fischer498/GSE49710_R2.txt'))
     exprdata_A.index = exprdata_A.pop('#H:hugo')
     del exprdata_A['probeset']
     
@@ -272,13 +275,13 @@ def get_SequencedFischerData():
         gzip.open(
             os.path.join(
                 privatedir,
-                'R2_grabbed_data/Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_G_log2.txt.gz'
+                'Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_G_log2.txt.gz'
             ), 'rt',encoding="UTF-8"
         ),
         index_col = '00gene_id'
     )
     exprdata_G.columns = [
-        metadata.reset_index().set_index('Sample_title').ix[c.split('_')[1]].Sample_geo_accession
+        metadata.reset_index().set_index('Sample_title').loc[c.split('_')[1]].Sample_geo_accession
         for c in exprdata_G.columns
     ]
 
@@ -287,7 +290,7 @@ def get_SequencedFischerData():
         gzip.open(
             os.path.join(
                 privatedir,
-                'R2_grabbed_data/Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_T_log2.txt.gz'
+                'Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_T_log2.txt.gz'
             ), 'rt',encoding="UTF-8"
         ),
         index_col = '00transcript_id'
@@ -299,7 +302,7 @@ def get_SequencedFischerData():
         gzip.open(
             os.path.join(
                 privatedir,
-                'R2_grabbed_data/Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_J_log2.txt.gz'
+                'Fischer498/sequencedData/GSE49711_SEQC_NB_TUC_J_log2.txt.gz'
             ), 'rt',encoding="UTF-8"
         ),
         index_col = 'sample_ID'
@@ -311,22 +314,22 @@ def get_SequencedFischerData():
     
     #aCGH
     aCGH = pd.read_table(
-        os.path.join(privatedir,'R2_grabbed_data/Fischer498/SEQC_aCGH/SEQC_aCGH_all_146.txt')
+        os.path.join(privatedir,'Fischer498/SEQC_aCGH/SEQC_aCGH_all_146.txt')
     )
     geosearch = metadata[['Sample_title']].copy()
     geosearch.reset_index(inplace=True)
     geosearch.set_index('Sample_title',inplace=True)
-    aCGH.Sample = aCGH.Sample.apply(lambda x: geosearch.ix[x].Sample_geo_accession)
+    aCGH.Sample = aCGH.Sample.apply(lambda x: geosearch.loc[x].Sample_geo_accession)
     del geosearch
     aCGH['log2ratio'] = (aCGH.CN/2).apply(np.log2)
     #Convert coordinates to hg38
-    lo = LSD.get_lift19to38()
+    lo = get_lift19to38()
     aCGH['Start38'] = aCGH.T.apply(lambda x: lo.convert_coordinate(x.Chromosome,x.Start)).apply(lambda x: x[0][1] if x else np.nan)
     aCGH['End38'] = aCGH.T.apply(lambda x: lo.convert_coordinate(x.Chromosome,x.End)).apply(lambda x: x[0][1] if x else np.nan)
     del lo, aCGH['Start'], aCGH['End']
     aCGH = aCGH.dropna().copy()
     #Assign genes to regions
-    genannot = LSD.get_ensemblGeneannot()
+    genannot = get_ensemblGeneannot()
     aCGH['genes'] = aCGH.T.apply(lambda x: {f.attributes['gene_name'][0] for f in genannot.region('{}:{}-{}'
                                                     .format(x.Chromosome[3:],int(x.Start38),int(x.End38)),featuretype='gene')})
     aCGH['nrGenes'] = aCGH.genes.apply(len)
